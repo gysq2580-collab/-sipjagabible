@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>십자가성경 - 개인 성경 앱</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#3F6659">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="십자가성경">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <button class="icon-btn" id="btnMenu" title="책 목록">☰</button>
+    <div class="brand">
+      <div class="stamp">十</div>
+      <h1>십자가성경</h1>
+      <span class="tag">개인 성경 서재</span>
+    </div>
+    <span class="clock" id="clockDisplay"></span>
+
+    <select id="versionSelect" title="번역본 선택"></select>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="단어 검색 (예: 사랑, 은혜)">
+      <button id="searchBtn">검색</button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button class="icon-btn" id="btnTTS" title="본문 낭독">🔊</button>
+    <button class="icon-btn" id="btnPrint" title="인쇄">🖨</button>
+    <button class="icon-btn" id="btnCompare" title="버전 비교">⇄</button>
+    <button class="icon-btn" id="btnPlan" title="오늘의 읽기">📖</button>
+    <button class="icon-btn" id="btnBookmarks" title="즐겨찾기">★</button>
+    <button class="icon-btn" id="btnFontMinus" title="글자 작게">A-</button>
+    <button class="icon-btn" id="btnFontPlus" title="글자 크게">A+</button>
+    <button class="icon-btn" id="btnTheme" title="다크모드">☾</button>
+  </header>
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="reading" id="reading">
+    <div class="loading-msg">왼쪽에서 책을 선택해 주세요.</div>
+  </main>
+
+</div>
+
+<!-- 검색 결과 오버레이 -->
+<div class="overlay" id="overlaySearch">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h2>검색 결과</h2>
+      <button class="close-btn" data-close="overlaySearch">×</button>
+    </div>
+    <div class="overlay-body" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- 비교보기 오버레이 -->
+<div class="overlay" id="overlayCompare">
+  <div class="overlay-panel" style="width:min(900px,95vw);">
+    <div class="overlay-header">
+      <h2>버전 비교 (최대 4개)</h2>
+      <button class="close-btn" data-close="overlayCompare">×</button>
+    </div>
+    <div class="overlay-body">
+      <div class="compare-picker" id="comparePicker"></div>
+      <div class="compare-grid" id="compareGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 오늘의 읽기 오버레이 -->
+<div class="overlay" id="overlayPlan">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h2>매일 성경 읽기</h2>
+      <button class="close-btn" data-close="overlayPlan">×</button>
+    </div>
+    <div class="overlay-body" id="planBody"></div>
+  </div>
+</div>
+
+<!-- 인쇄 오버레이 -->
+<div class="overlay" id="overlayPrint">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h2>성경 인쇄</h2>
+      <button class="close-btn" data-close="overlayPrint">×</button>
+    </div>
+    <div class="overlay-body">
+      <div class="print-field">
+        <label>인쇄할 번역본</label>
+        <select id="printVersion"></select>
+      </div>
+
+      <div class="print-field">
+        <label>인쇄 범위</label>
+        <div class="print-radio-row">
+          <label><input type="radio" name="printMode" value="current" checked> 현재 보고 있는 장만</label>
+          <label><input type="radio" name="printMode" value="range"> 범위 지정</label>
+        </div>
+      </div>
+
+      <div id="printRangeFields" style="display:none;">
+        <div class="print-range-grid">
+          <div>
+            <div class="print-sub-label">시작</div>
+            <select id="printStartBook"></select>
+            <select id="printStartChapter"></select>
+            <input type="number" id="printStartVerse" min="1" placeholder="절(생략시 처음부터)">
+          </div>
+          <div>
+            <div class="print-sub-label">종료</div>
+            <select id="printEndBook"></select>
+            <select id="printEndChapter"></select>
+            <input type="number" id="printEndVerse" min="1" placeholder="절(생략시 끝까지)">
+          </div>
+        </div>
+      </div>
+
+      <label class="print-check-row"><input type="checkbox" id="printIncludeVerseNum" checked> 절 번호 포함</label>
+
+      <button class="topbar_primary_like" id="printGoBtn">인쇄 미리보기 열기</button>
+      <div class="empty-msg" style="text-align:left;">브라우저의 인쇄 대화상자가 열리면 프린터를 선택하거나 "PDF로 저장"을 선택하실 수 있습니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 즐겨찾기 오버레이 -->
+<div class="overlay" id="overlayBookmarks">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h2>즐겨찾기</h2>
+      <button class="close-btn" data-close="overlayBookmarks">×</button>
+    </div>
+    <div class="overlay-body" id="bookmarksBody"></div>
+  </div>
+</div>
+
+<!-- 인쇄 전용 영역 (평소엔 화면에 보이지 않고, 인쇄할 때만 나타남) -->
+<div id="printArea"></div>
+
+<script src="data/books.js"></script>
+<script src="data/versions.js"></script>
+<script src="data/xref.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
