@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sipjagab-v1';
+const CACHE_NAME = 'sipjagab-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -24,26 +24,22 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// 캐시 우선, 없으면 네트워크 요청 후 캐시에 저장 (성경 버전 데이터도 열어본 것부터 자동 저장됨)
+// 네트워크 우선(항상 최신 파일을 먼저 시도) -> 실패하면(오프라인일 때만) 캐시 사용
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return res;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((res) => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
